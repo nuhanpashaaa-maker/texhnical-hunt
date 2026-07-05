@@ -1,639 +1,282 @@
-import { useState, useEffect, useRef } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technical Treasure Hunt</title>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    padding: 30px 15px;
+  }
 
-const CLUES = [
-  {
-    id: 1,
-    category: "Data Structures",
-    difficulty: "Easy",
-    riddle: "I hold your data in key-value pairs,\nLookups in O(1) — no one compares.\nPython calls me dict, JS calls me object too.\nWhat am I?",
-    answer: "hashmap",
-    aliases: ["hash map", "hash table", "hashtable", "dictionary", "dict"],
-    hint: "Think of a phonebook — names map to numbers.",
-    treasure: "🗝️ Key of Constant Lookup",
-    funFact: "Hash maps power databases, caches, and compilers — they're everywhere!",
-  },
-  {
-    id: 2,
-    category: "Algorithms",
-    difficulty: "Easy",
-    riddle: "I split the problem, conquer each half,\nMerge Sort and Quick Sort walk my path.\nWhat strategy do I follow?",
-    answer: "divide and conquer",
-    aliases: ["divide & conquer", "divide conquer"],
-    hint: "Julius Caesar's motto also applies to algorithms.",
-    treasure: "⚔️ Sword of Recursion",
-    funFact: "Binary search also uses this strategy — halving the search space each time!",
-  },
-  {
-    id: 3,
-    category: "Networking",
-    difficulty: "Medium",
-    riddle: "I'm a handshake in three parts — SYN, SYN-ACK, ACK.\nWithout me, your data won't find its way back.\nWhat protocol am I?",
-    answer: "tcp",
-    aliases: ["transmission control protocol", "tcp/ip"],
-    hint: "Your browser uses me every time you load a webpage.",
-    treasure: "🤝 Scroll of Reliable Delivery",
-    funFact: "TCP was designed in 1974. It's still the backbone of the internet today!",
-  },
-  {
-    id: 4,
-    category: "Operating Systems",
-    difficulty: "Medium",
-    riddle: "I'm not alive, yet I run many tasks.\nI give each process time, then switch fast.\nNo CPU for long — I share it with all.\nWhat am I called when threads heed my call?",
-    answer: "scheduler",
-    aliases: ["cpu scheduler", "process scheduler", "task scheduler"],
-    hint: "The OS uses me to fairly distribute CPU time.",
-    treasure: "⏱️ Hourglass of Time Slicing",
-    funFact: "Modern OSes use complex scheduling algorithms like CFS (Completely Fair Scheduler) in Linux.",
-  },
-  {
-    id: 5,
-    category: "Web Dev",
-    difficulty: "Medium",
-    riddle: "I sit between client and server, silent and sly.\nI cache, I balance, I filter — ask me why.\nNginx and HAProxy wear my disguise.\nWhat type of server am I?",
-    answer: "reverse proxy",
-    aliases: ["proxy", "reverse-proxy", "load balancer"],
-    hint: "Think of me as a bouncer who routes guests to the right room.",
-    treasure: "🛡️ Shield of Load Balancing",
-    funFact: "Reverse proxies also add SSL termination, hiding backend complexity from users.",
-  },
-  {
-    id: 6,
-    category: "Databases",
-    difficulty: "Hard",
-    riddle: "I prevent dirty reads and phantom rows.\nFour levels deep, my isolation grows.\nTransactions fear me, ACID loves me so.\nWhat property ensures consistency's flow?",
-    answer: "isolation",
-    aliases: ["transaction isolation", "acid isolation"],
-    hint: "I'm the 'I' in ACID properties.",
-    treasure: "🔐 Vault of ACID Compliance",
-    funFact: "The four ACID properties — Atomicity, Consistency, Isolation, Durability — are fundamental to relational DBs.",
-  },
-  {
-    id: 7,
-    category: "Security",
-    difficulty: "Hard",
-    riddle: "I turn plaintext into cipher, lock it tight.\nAES and RSA wield me with might.\nWithout the key, your secrets stay sealed.\nWhat art keeps private data concealed?",
-    answer: "encryption",
-    aliases: ["cryptography", "cipher"],
-    hint: "HTTPS wouldn't exist without me.",
-    treasure: "🏆 Golden Trophy of Secure Systems",
-    funFact: "AES-256 encryption would take longer than the age of the universe to brute-force with current hardware!",
-  },
-];
+  .container {
+    background-color: #ffffff;
+    max-width: 500px;
+    width: 100%;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
 
-const DIFFICULTY_COLOR = {
-  Easy: "#4ade80",
-  Medium: "#facc15",
-  Hard: "#f87171",
-};
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+  }
 
-export default function TechTreasureHunt() {
-  const [screen, setScreen] = useState("intro"); // intro | game | complete
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [input, setInput] = useState("");
-  const [status, setStatus] = useState(null); // null | correct | wrong | hint
-  const [showHint, setShowHint] = useState(false);
-  const [showFact, setShowFact] = useState(false);
-  const [score, setScore] = useState(0);
-  const [hintsUsed, setHintsUsed] = useState(0);
-  const [attempts, setAttempts] = useState(0);
-  const [collectedTreasures, setCollectedTreasures] = useState([]);
-  const [shake, setShake] = useState(false);
-  const [glowCorrect, setGlowCorrect] = useState(false);
-  const inputRef = useRef(null);
+  #score-board {
+    text-align: right;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
 
-  const clue = CLUES[currentIdx];
-  const progress = ((currentIdx) / CLUES.length) * 100;
+  .clue-box {
+    background-color: #eef4ff;
+    border: 1px solid #cddcf5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
 
-  useEffect(() => {
-    if (screen === "game" && inputRef.current) inputRef.current.focus();
-  }, [screen, currentIdx]);
+  .category {
+    font-size: 14px;
+    color: #4a6fa5;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
 
-  function normalizeAnswer(str) {
-    return str.trim().toLowerCase().replace(/[^a-z0-9 ]/g, "");
+  .riddle-text {
+    font-size: 16px;
+    color: #333;
+    white-space: pre-line;
+    margin-bottom: 15px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    padding: 10px 18px;
+    font-size: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+
+  #submit-btn {
+    background-color: #4a6fa5;
+    color: white;
+  }
+
+  #hint-btn {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+
+  #next-btn {
+    background-color: #2e7d32;
+    color: white;
+  }
+
+  #message {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .correct-msg { color: green; }
+  .wrong-msg { color: red; }
+
+  #hint-text {
+    font-style: italic;
+    color: #7a5c00;
+    background-color: #fff8e1;
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  #result-screen {
+    text-align: center;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔍 Technical Treasure Hunt</h1>
+  <div id="score-board">Score: <span id="score">0</span></div>
+
+  <!-- Game Screen -->
+  <div id="game-screen">
+    <div class="clue-box">
+      <div class="category" id="category-label"></div>
+      <p class="riddle-text" id="riddle-text"></p>
+
+      <p id="hint-text" class="hidden"></p>
+      <p id="message"></p>
+
+      <input type="text" id="answer-box" placeholder="Type your answer here">
+      <br>
+      <button id="submit-btn" onclick="checkAnswer()">Submit</button>
+      <button id="hint-btn" onclick="showHint()">Show Hint</button>
+      <button id="next-btn" class="hidden" onclick="loadNextClue()">Next Clue</button>
+    </div>
+    <p>Clue <span id="clue-number">1</span> of <span id="total-clues"></span></p>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen" class="hidden">
+    <h2>🎉 Hunt Completed!</h2>
+    <p>Your final score is <strong id="final-score"></strong> out of <strong id="max-score"></strong>.</p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+  // Array of clue objects. Each clue has a category, a riddle, an answer, and a hint.
+  var clues = [
+    {
+      category: "Data Structures",
+      riddle: "I store elements in key-value pairs.\nLookup takes constant time on average.\nWhat data structure am I?",
+      answer: "hashmap",
+      hint: "Also called a hash table or dictionary."
+    },
+    {
+      category: "Algorithms",
+      riddle: "I repeatedly divide the array in half\nto search for a target value quickly.\nWhat search algorithm am I?",
+      answer: "binary search",
+      hint: "Only works on sorted arrays."
+    },
+    {
+      category: "Object Oriented Programming",
+      riddle: "I allow a child class to reuse\nthe properties and methods of a parent class.\nWhat OOP concept am I?",
+      answer: "inheritance",
+      hint: "Think of a 'Car' class extending a 'Vehicle' class."
+    },
+    {
+      category: "Networking",
+      riddle: "I resolve human-readable website names\ninto IP addresses that computers understand.\nWhat system am I?",
+      answer: "dns",
+      hint: "Stands for Domain Name System."
+    },
+    {
+      category: "Databases",
+      riddle: "I combine rows from two or more tables\nbased on a related column between them.\nWhat SQL operation am I?",
+      answer: "join",
+      hint: "INNER, LEFT, and RIGHT are common types of me."
+    }
+  ];
+
+  var currentClueIndex = 0;
+  var score = 0;
+  var pointsPerClue = 10;
+  var hintPenalty = 4;
+  var hintUsedForCurrentClue = false;
+
+  // Set total number of clues on page load
+  document.getElementById("total-clues").textContent = clues.length;
+
+  function loadClue() {
+    var clue = clues[currentClueIndex];
+
+    document.getElementById("category-label").textContent = clue.category;
+    document.getElementById("riddle-text").textContent = clue.riddle;
+    document.getElementById("clue-number").textContent = currentClueIndex + 1;
+
+    // Reset UI elements for the new clue
+    document.getElementById("answer-box").value = "";
+    document.getElementById("message").textContent = "";
+    document.getElementById("message").className = "";
+    document.getElementById("hint-text").classList.add("hidden");
+    document.getElementById("hint-text").textContent = "";
+    document.getElementById("next-btn").classList.add("hidden");
+    document.getElementById("submit-btn").classList.remove("hidden");
+    document.getElementById("hint-btn").classList.remove("hidden");
+    document.getElementById("answer-box").classList.remove("hidden");
+
+    hintUsedForCurrentClue = false;
   }
 
   function checkAnswer() {
-    const val = normalizeAnswer(input);
-    const correct =
-      val === normalizeAnswer(clue.answer) ||
-      clue.aliases.some((a) => val === normalizeAnswer(a));
+    var userAnswer = document.getElementById("answer-box").value;
+    userAnswer = userAnswer.trim().toLowerCase();
 
-    setAttempts((p) => p + 1);
+    var correctAnswer = clues[currentClueIndex].answer.toLowerCase();
+    var messageBox = document.getElementById("message");
 
-    if (correct) {
-      const pts = showHint ? 5 : 10;
-      setScore((s) => s + pts);
-      setCollectedTreasures((t) => [...t, clue.treasure]);
-      setStatus("correct");
-      setGlowCorrect(true);
-      setTimeout(() => setShowFact(true), 600);
+    if (userAnswer === correctAnswer) {
+      var pointsEarned = hintUsedForCurrentClue ? (pointsPerClue - hintPenalty) : pointsPerClue;
+      score = score + pointsEarned;
+      document.getElementById("score").textContent = score;
+
+      messageBox.textContent = "Correct! +" + pointsEarned + " points";
+      messageBox.className = "correct-msg";
+
+      document.getElementById("submit-btn").classList.add("hidden");
+      document.getElementById("hint-btn").classList.add("hidden");
+      document.getElementById("answer-box").classList.add("hidden");
+      document.getElementById("next-btn").classList.remove("hidden");
     } else {
-      setStatus("wrong");
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-    }
-    setInput("");
-  }
-
-  function nextClue() {
-    if (currentIdx + 1 >= CLUES.length) {
-      setScreen("complete");
-    } else {
-      setCurrentIdx((i) => i + 1);
-      setStatus(null);
-      setShowHint(false);
-      setShowFact(false);
-      setGlowCorrect(false);
+      messageBox.textContent = "That's not correct. Try again!";
+      messageBox.className = "wrong-msg";
     }
   }
 
-  function useHint() {
-    setShowHint(true);
-    setHintsUsed((h) => h + 1);
+  function showHint() {
+    hintUsedForCurrentClue = true;
+    var hintBox = document.getElementById("hint-text");
+    hintBox.textContent = "Hint: " + clues[currentClueIndex].hint;
+    hintBox.classList.remove("hidden");
   }
 
-  function restart() {
-    setScreen("intro");
-    setCurrentIdx(0);
-    setInput("");
-    setStatus(null);
-    setShowHint(false);
-    setShowFact(false);
-    setScore(0);
-    setHintsUsed(0);
-    setAttempts(0);
-    setCollectedTreasures([]);
-    setGlowCorrect(false);
+  function loadNextClue() {
+    currentClueIndex = currentClueIndex + 1;
+
+    if (currentClueIndex < clues.length) {
+      loadClue();
+    } else {
+      showResultScreen();
+    }
   }
 
-  const pct = Math.round((score / (CLUES.length * 10)) * 100);
+  function showResultScreen() {
+    document.getElementById("game-screen").classList.add("hidden");
+    document.getElementById("result-screen").classList.remove("hidden");
 
-  return (
-    <div style={styles.root}>
-      <div style={styles.stars} />
+    document.getElementById("final-score").textContent = score;
+    document.getElementById("max-score").textContent = clues.length * pointsPerClue;
+  }
 
-      {screen === "intro" && (
-        <div style={styles.card}>
-          <div style={styles.iconBig}>🗺️</div>
-          <h1 style={styles.title}>Technical Treasure Hunt</h1>
-          <p style={styles.subtitle}>
-            Solve 7 tech riddles across CS topics — Data Structures, Networking,
-            Security, and more. Collect treasures. Prove your knowledge.
-          </p>
-          <div style={styles.rulesBox}>
-            <div style={styles.ruleRow}><span style={styles.ruleIcon}>✅</span> Correct answer = <b>10 pts</b></div>
-            <div style={styles.ruleRow}><span style={styles.ruleIcon}>💡</span> Used a hint = <b>5 pts</b></div>
-            <div style={styles.ruleRow}><span style={styles.ruleIcon}>🏆</span> Collect all 7 treasures</div>
-          </div>
-          <button style={styles.btnPrimary} onClick={() => setScreen("game")}>
-            Begin the Hunt →
-          </button>
-        </div>
-      )}
+  function restartGame() {
+    currentClueIndex = 0;
+    score = 0;
+    document.getElementById("score").textContent = score;
 
-      {screen === "game" && (
-        <div style={styles.gameWrap}>
-          {/* Header */}
-          <div style={styles.header}>
-            <span style={styles.headerLeft}>🗺️ Tech Treasure Hunt</span>
-            <span style={styles.score}>⭐ {score} pts</span>
-          </div>
+    document.getElementById("result-screen").classList.add("hidden");
+    document.getElementById("game-screen").classList.remove("hidden");
 
-          {/* Progress */}
-          <div style={styles.progressBar}>
-            <div style={{ ...styles.progressFill, width: `${progress}%` }} />
-          </div>
-          <div style={styles.progressLabel}>
-            Clue {currentIdx + 1} of {CLUES.length}
-          </div>
+    loadClue();
+  }
 
-          {/* Clue Card */}
-          <div
-            style={{
-              ...styles.clueCard,
-              ...(glowCorrect ? styles.clueCardCorrect : {}),
-              ...(shake ? styles.clueCardShake : {}),
-            }}
-          >
-            <div style={styles.clueTop}>
-              <span style={styles.category}>{clue.category}</span>
-              <span
-                style={{
-                  ...styles.difficulty,
-                  color: DIFFICULTY_COLOR[clue.difficulty],
-                  borderColor: DIFFICULTY_COLOR[clue.difficulty],
-                }}
-              >
-                {clue.difficulty}
-              </span>
-            </div>
+  // Load the first clue when the page opens
+  loadClue();
+</script>
 
-            <pre style={styles.riddle}>{clue.riddle}</pre>
-
-            {showHint && (
-              <div style={styles.hintBox}>
-                💡 <em>{clue.hint}</em>
-              </div>
-            )}
-
-            {showFact && (
-              <div style={styles.factBox}>
-                <div style={styles.treasureLabel}>{clue.treasure} — Collected!</div>
-                <div style={styles.factText}>📖 {clue.funFact}</div>
-              </div>
-            )}
-
-            {/* Input area */}
-            {!showFact && (
-              <div style={styles.inputRow}>
-                <input
-                  ref={inputRef}
-                  style={{
-                    ...styles.input,
-                    ...(status === "wrong" ? styles.inputWrong : {}),
-                    ...(status === "correct" ? styles.inputCorrect : {}),
-                  }}
-                  placeholder="Type your answer..."
-                  value={input}
-                  onChange={(e) => { setInput(e.target.value); setStatus(null); }}
-                  onKeyDown={(e) => e.key === "Enter" && input.trim() && checkAnswer()}
-                />
-                <button
-                  style={{ ...styles.btnPrimary, marginTop: 0 }}
-                  onClick={checkAnswer}
-                  disabled={!input.trim()}
-                >
-                  Submit
-                </button>
-              </div>
-            )}
-
-            {status === "wrong" && (
-              <div style={styles.wrongMsg}>❌ Not quite — try again!</div>
-            )}
-            {status === "correct" && !showFact && (
-              <div style={styles.correctMsg}>✅ Correct!</div>
-            )}
-
-            {/* Action buttons */}
-            <div style={styles.actionRow}>
-              {!showHint && !showFact && (
-                <button style={styles.btnSecondary} onClick={useHint}>
-                  💡 Use Hint (–5 pts)
-                </button>
-              )}
-              {showFact && (
-                <button style={styles.btnPrimary} onClick={nextClue}>
-                  {currentIdx + 1 >= CLUES.length ? "🏆 See Results" : "Next Clue →"}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Treasures collected */}
-          {collectedTreasures.length > 0 && (
-            <div style={styles.treasureStrip}>
-              {collectedTreasures.map((t, i) => (
-                <span key={i} title={t} style={styles.treasureChip}>
-                  {t.split(" ")[0]}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {screen === "complete" && (
-        <div style={styles.card}>
-          <div style={styles.iconBig}>🏆</div>
-          <h1 style={styles.title}>Hunt Complete!</h1>
-
-          <div style={styles.resultsGrid}>
-            <div style={styles.resultCell}>
-              <div style={styles.resultNum}>{score}</div>
-              <div style={styles.resultLabel}>Total Points</div>
-            </div>
-            <div style={styles.resultCell}>
-              <div style={styles.resultNum}>{pct}%</div>
-              <div style={styles.resultLabel}>Score %</div>
-            </div>
-            <div style={styles.resultCell}>
-              <div style={styles.resultNum}>{hintsUsed}</div>
-              <div style={styles.resultLabel}>Hints Used</div>
-            </div>
-            <div style={styles.resultCell}>
-              <div style={styles.resultNum}>{collectedTreasures.length}</div>
-              <div style={styles.resultLabel}>Treasures</div>
-            </div>
-          </div>
-
-          <div style={styles.grade}>
-            {pct >= 90 ? "🌟 Legend Coder" :
-             pct >= 70 ? "💪 Senior Dev" :
-             pct >= 50 ? "🛠️ Junior Dev" : "📚 Keep Learning"}
-          </div>
-
-          <div style={styles.treasureStrip}>
-            {collectedTreasures.map((t, i) => (
-              <span key={i} title={t} style={styles.treasureChip}>{t}</span>
-            ))}
-          </div>
-
-          <button style={styles.btnPrimary} onClick={restart}>
-            🔄 Hunt Again
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const styles = {
-  root: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #0f0c29, #1a1a40, #0f0c29)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Courier New', Courier, monospace",
-    padding: "24px 16px",
-    position: "relative",
-    overflow: "hidden",
-  },
-  stars: {
-    position: "absolute",
-    inset: 0,
-    background: `radial-gradient(ellipse at 20% 20%, rgba(120,80,255,0.12) 0%, transparent 60%),
-                 radial-gradient(ellipse at 80% 80%, rgba(0,200,255,0.08) 0%, transparent 60%)`,
-    pointerEvents: "none",
-  },
-  card: {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 20,
-    padding: "40px 36px",
-    maxWidth: 560,
-    width: "100%",
-    textAlign: "center",
-    backdropFilter: "blur(16px)",
-    zIndex: 1,
-  },
-  iconBig: { fontSize: 64, marginBottom: 12 },
-  title: {
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#e2d9ff",
-    margin: "0 0 12px",
-    letterSpacing: 1,
-  },
-  subtitle: {
-    color: "#a89ec0",
-    fontSize: 14,
-    lineHeight: 1.7,
-    margin: "0 0 24px",
-  },
-  rulesBox: {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 12,
-    padding: "16px 20px",
-    marginBottom: 24,
-    textAlign: "left",
-  },
-  ruleRow: {
-    color: "#c4b5f4",
-    fontSize: 13,
-    marginBottom: 8,
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  ruleIcon: { fontSize: 16 },
-  btnPrimary: {
-    background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
-    color: "#fff",
-    border: "none",
-    borderRadius: 10,
-    padding: "12px 28px",
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: "pointer",
-    marginTop: 8,
-    transition: "opacity 0.2s",
-    fontFamily: "inherit",
-  },
-  btnSecondary: {
-    background: "transparent",
-    color: "#a89ec0",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    padding: "10px 20px",
-    fontSize: 13,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-
-  // Game
-  gameWrap: {
-    maxWidth: 620,
-    width: "100%",
-    zIndex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    color: "#c4b5f4",
-    fontSize: 14,
-    fontWeight: 600,
-    padding: "0 4px",
-  },
-  headerLeft: { fontSize: 15 },
-  score: {
-    background: "rgba(255,255,255,0.08)",
-    padding: "4px 14px",
-    borderRadius: 20,
-    fontSize: 13,
-    color: "#e2d9ff",
-  },
-  progressBar: {
-    background: "rgba(255,255,255,0.08)",
-    borderRadius: 8,
-    height: 6,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    background: "linear-gradient(90deg, #7c3aed, #06b6d4)",
-    borderRadius: 8,
-    transition: "width 0.5s ease",
-  },
-  progressLabel: {
-    color: "#6b7280",
-    fontSize: 11,
-    textAlign: "right",
-    paddingRight: 2,
-  },
-  clueCard: {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 18,
-    padding: "28px 24px",
-    backdropFilter: "blur(12px)",
-    transition: "box-shadow 0.4s",
-  },
-  clueCardCorrect: {
-    boxShadow: "0 0 40px rgba(74,222,128,0.25)",
-    borderColor: "rgba(74,222,128,0.3)",
-  },
-  clueCardShake: {
-    animation: "shake 0.5s",
-  },
-  clueTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  category: {
-    color: "#818cf8",
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  difficulty: {
-    fontSize: 11,
-    fontWeight: 700,
-    border: "1px solid",
-    padding: "2px 10px",
-    borderRadius: 20,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  riddle: {
-    color: "#e2d9ff",
-    fontSize: 14,
-    lineHeight: 1.9,
-    whiteSpace: "pre-wrap",
-    fontFamily: "inherit",
-    margin: "0 0 20px",
-  },
-  hintBox: {
-    background: "rgba(250,204,21,0.08)",
-    border: "1px solid rgba(250,204,21,0.25)",
-    borderRadius: 10,
-    padding: "10px 14px",
-    color: "#fef08a",
-    fontSize: 13,
-    marginBottom: 16,
-  },
-  factBox: {
-    background: "rgba(74,222,128,0.07)",
-    border: "1px solid rgba(74,222,128,0.25)",
-    borderRadius: 10,
-    padding: "14px 16px",
-    marginBottom: 16,
-    textAlign: "left",
-  },
-  treasureLabel: {
-    color: "#4ade80",
-    fontSize: 14,
-    fontWeight: 700,
-    marginBottom: 8,
-  },
-  factText: {
-    color: "#a7f3d0",
-    fontSize: 13,
-    lineHeight: 1.6,
-  },
-  inputRow: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 10,
-    alignItems: "stretch",
-  },
-  input: {
-    flex: 1,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    padding: "11px 16px",
-    color: "#e2d9ff",
-    fontSize: 14,
-    fontFamily: "inherit",
-    outline: "none",
-    transition: "border-color 0.2s",
-  },
-  inputWrong: {
-    borderColor: "rgba(248,113,113,0.6)",
-    background: "rgba(248,113,113,0.05)",
-  },
-  inputCorrect: {
-    borderColor: "rgba(74,222,128,0.6)",
-    background: "rgba(74,222,128,0.05)",
-  },
-  wrongMsg: {
-    color: "#f87171",
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  correctMsg: {
-    color: "#4ade80",
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  actionRow: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 10,
-    marginTop: 4,
-  },
-  treasureStrip: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
-    justifyContent: "center",
-    padding: "4px 0",
-  },
-  treasureChip: {
-    background: "rgba(124,58,237,0.2)",
-    border: "1px solid rgba(124,58,237,0.35)",
-    borderRadius: 20,
-    padding: "4px 12px",
-    color: "#c4b5f4",
-    fontSize: 12,
-  },
-
-  // Results
-  resultsGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
-    margin: "20px 0",
-  },
-  resultCell: {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 12,
-    padding: "16px 12px",
-  },
-  resultNum: {
-    color: "#c4b5f4",
-    fontSize: 28,
-    fontWeight: 700,
-  },
-  resultLabel: {
-    color: "#6b7280",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  grade: {
-    fontSize: 20,
-    color: "#e2d9ff",
-    fontWeight: 700,
-    marginBottom: 16,
-  },
-};
+</body>
+</html>
